@@ -1,35 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+
+import Home from "./pages/public/Home";
+import About from "./pages/public/About";
+import Coaches from "./pages/public/Coaches";
+import Gallery from "./pages/public/Gallery";
+import Contact from "./pages/public/Contact";
+import Login from "./pages/public/Login";
+import Register from "./pages/public/Register";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CoachDashboard from "./pages/coach/CoachDashboard";
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import PlayerDashboard from "./pages/player/PlayerDashboard";
+import PlayerRegister from "./pages/player/PlayerRegister";
+
+function Layout() {
+  const location = useLocation();
+
+  const dashboardRoutes = [
+    "/admin",
+    "/coach",
+    "/parent",
+    "/player",
+    "/player-register",
+  ];
+
+  const isDashboard = dashboardRoutes.includes(location.pathname);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen flex flex-col">
+
+      {!isDashboard && <Header />}
+
+      <main className="flex-1">
+
+        <Routes>
+
+          {/* Public Pages */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/coaches" element={<Coaches />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/contact" element={<Contact />} />
+
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Dashboards */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/coach" element={<CoachDashboard />} />
+          <Route path="/parent" element={<ParentDashboard />} />
+          <Route path="/player" element={<PlayerDashboard />} />
+          <Route path="/player-register" element={<PlayerRegister />} />
+
+        </Routes>
+
+      </main>
+
+      {!isDashboard && <Footer />}
+
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>
+  );
+}
+
+export default App;
