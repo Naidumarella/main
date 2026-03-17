@@ -12,6 +12,7 @@ import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Tournament from "./pages/admin/Tournament";
 import CoachDashboard from "./pages/coach/CoachDashboard";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import PlayerDashboard from "./pages/player/PlayerDashboard";
@@ -22,6 +23,7 @@ function Layout() {
 
   const dashboardRoutes = [
     "/admin",
+    "/tournaments",
     "/coach",
     "/parent",
     "/player",
@@ -32,13 +34,10 @@ function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-
       {!isDashboard && <Header />}
 
       <main className="flex-1">
-
         <Routes>
-
           {/* Public Pages */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -52,17 +51,15 @@ function Layout() {
 
           {/* Dashboards */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/tournaments" element={<Tournament />} />
           <Route path="/coach" element={<CoachDashboard />} />
           <Route path="/parent" element={<ParentDashboard />} />
           <Route path="/player" element={<PlayerDashboard />} />
           <Route path="/player-register" element={<PlayerRegister />} />
-
         </Routes>
-
       </main>
 
       {!isDashboard && <Footer />}
-
     </div>
   );
 }

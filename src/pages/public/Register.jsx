@@ -25,7 +25,7 @@ function Register() {
     playerRole: "",
     battingStyle: "",
     bowlingStyle: "",
-    profilePhoto: null,
+    profilePhoto: "",
     parentName: "",
     parentPhone: "",
     parentEmail: "",
@@ -39,11 +39,36 @@ function Register() {
     "w-full border border-gray-300 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-green-600";
 
   const coaches = {
-    batting: { name: "Rahul Sharma", email: "rahul@academy.com", role: "Batting Coach", time: "6 AM - 9 AM" },
-    bowling: { name: "Anil Kumar", email: "anil@academy.com", role: "Bowling Coach", time: "7 AM - 10 AM" },
-    fielding: { name: "Suresh Reddy", email: "suresh@academy.com", role: "Fielding Coach", time: "5 PM - 7 PM" },
-    fitness: { name: "Ramesh Patel", email: "ramesh@academy.com", role: "Fitness Coach", time: "6 PM - 8 PM" },
-    wicket: { name: "Kiran Verma", email: "kiran@academy.com", role: "Wicket Keeping Coach", time: "4 PM - 6 PM" },
+    batting: {
+      name: "Rahul Sharma",
+      email: "rahul@academy.com",
+      role: "Batting Coach",
+      time: "6 AM - 9 AM",
+    },
+    bowling: {
+      name: "Anil Kumar",
+      email: "anil@academy.com",
+      role: "Bowling Coach",
+      time: "7 AM - 10 AM",
+    },
+    fielding: {
+      name: "Suresh Reddy",
+      email: "suresh@academy.com",
+      role: "Fielding Coach",
+      time: "5 PM - 7 PM",
+    },
+    fitness: {
+      name: "Ramesh Patel",
+      email: "ramesh@academy.com",
+      role: "Fitness Coach",
+      time: "6 PM - 8 PM",
+    },
+    wicket: {
+      name: "Kiran Verma",
+      email: "kiran@academy.com",
+      role: "Wicket Keeping Coach",
+      time: "4 PM - 6 PM",
+    },
   };
 
   useEffect(() => {
@@ -56,14 +81,17 @@ function Register() {
     setCheckingSession(false);
   }, [navigate]);
 
-  const ageCategory =
-    form.age >= 6 && form.age <= 10
-      ? "U10"
-      : form.age >= 11 && form.age <= 14
-      ? "U14"
-      : form.age >= 15 && form.age <= 30
-      ? "U19"
-      : "";
+  const getAgeCategory = (ageValue) => {
+    const age = parseInt(ageValue, 10);
+
+    if (isNaN(age)) return "";
+    if (age <= 14) return "U-14";
+    if (age >= 15 && age <= 16) return "U-16";
+    if (age >= 17 && age <= 19) return "U-19";
+    return "Not Included";
+  };
+
+  const ageCategory = getAgeCategory(form.age);
 
   const onlyNumbers = (value, max = 10) =>
     value.replace(/\D/g, "").slice(0, max);
@@ -73,7 +101,13 @@ function Register() {
 
   const getAssignedCoachObjects = (playerRole) => {
     if (playerRole === "All Rounder") {
-      return [coaches.batting, coaches.bowling, coaches.fielding, coaches.fitness, coaches.wicket];
+      return [
+        coaches.batting,
+        coaches.bowling,
+        coaches.fielding,
+        coaches.fitness,
+        coaches.wicket,
+      ];
     }
     if (playerRole === "Batsman") {
       return [coaches.batting, coaches.fielding, coaches.fitness];
@@ -117,7 +151,14 @@ function Register() {
     const { name, value, files } = e.target;
 
     if (name === "profilePhoto") {
-      setValue(name, files?.[0] || null);
+      const file = files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("profilePhoto", reader.result);
+      };
+      reader.readAsDataURL(file);
       return;
     }
 
@@ -158,33 +199,47 @@ function Register() {
   };
 
   const validatePlayer = (err) => {
-    const age = Number(form.age);
+    const age = parseInt(form.age, 10);
 
-    if (!age) err.age = "Age is required.";
-    else if (age < 6) err.age = "Age must be above 6 years.";
-    else if (age > 30) err.age = "Age must not exceed 30 years.";
+    if (isNaN(age)) {
+      err.age = "Age is required.";
+    } else if (age < 6) {
+      err.age = "Age must be above 6 years.";
+    } else if (age > 30) {
+      err.age = "Age must not exceed 30 years.";
+    }
 
     if (!form.gender) err.gender = "Select gender.";
     if (!form.playerRole) err.playerRole = "Select cricket role.";
 
-    if (["Batsman", "Wicket Keeper", "All Rounder"].includes(form.playerRole) && !form.battingStyle) {
+    if (
+      ["Batsman", "Wicket Keeper", "All Rounder"].includes(form.playerRole) &&
+      !form.battingStyle
+    ) {
       err.battingStyle = "Select batting style.";
     }
 
-    if (["Bowler", "All Rounder"].includes(form.playerRole) && !form.bowlingStyle) {
+    if (
+      ["Bowler", "All Rounder"].includes(form.playerRole) &&
+      !form.bowlingStyle
+    ) {
       err.bowlingStyle = "Select bowling style.";
     }
 
     if (!form.parentName.trim()) err.parentName = "Parent name is required.";
-    if (!phoneOk(form.parentPhone)) err.parentPhone = "Parent phone must be 10 digits.";
-    if (!gmailOk(form.parentEmail)) err.parentEmail = "Parent email must end with @gmail.com.";
+    if (!phoneOk(form.parentPhone)) {
+      err.parentPhone = "Parent phone must be 10 digits.";
+    }
+    if (!gmailOk(form.parentEmail)) {
+      err.parentEmail = "Parent email must end with @gmail.com.";
+    }
   };
 
   const validateParent = (err) => {
-    const age = Number(form.childAge);
+    const age = parseInt(form.childAge, 10);
 
     if (!form.childName.trim()) err.childName = "Child name is required.";
-    if (!age) err.childAge = "Child age is required.";
+    if (isNaN(age)) err.childAge = "Child age is required.";
     else if (age < 6) err.childAge = "Child age must be above 6 years.";
     else if (age > 30) err.childAge = "Child age must not exceed 30 years.";
     if (!form.relation) err.relation = "Select relation.";
@@ -202,12 +257,13 @@ function Register() {
         password: form.password,
         role: "player",
         playerId,
-        age: form.age,
+        age: parseInt(form.age, 10),
         ageCategory,
         gender: form.gender,
         playerRole: form.playerRole,
         battingStyle: form.battingStyle,
         bowlingStyle: form.bowlingStyle,
+        profilePhoto: form.profilePhoto || "",
         parentName: form.parentName,
         parentPhone: form.parentPhone,
         parentEmail: form.parentEmail,
@@ -242,6 +298,7 @@ function Register() {
         phone: form.phone,
         password: form.password,
         role: "parent",
+        profilePhoto: form.profilePhoto || "",
         childName: form.childName,
         childAge: form.childAge,
         childPlayerId: form.childPlayerId,
@@ -267,7 +324,9 @@ function Register() {
   };
 
   const errorText = (name) =>
-    errors[name] ? <p className="text-red-500 text-sm mt-2">{errors[name]}</p> : null;
+    errors[name] ? (
+      <p className="text-red-500 text-sm mt-2">{errors[name]}</p>
+    ) : null;
 
   if (checkingSession) return null;
 
@@ -275,17 +334,14 @@ function Register() {
     <>
       <div className="min-h-screen bg-gradient-to-br from-green-100 via-white to-emerald-200 px-4 py-10 flex items-center justify-center">
         <div className="w-full max-w-6xl grid lg:grid-cols-2 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-white/50">
-          
           <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-green-700 to-emerald-500 text-white p-12">
             <p className="uppercase tracking-[0.3em] text-sm font-semibold mb-4">
               Cricket Academy
             </p>
-            <h1 className="text-5xl font-bold leading-tight">
-              Create Account
-            </h1>
+            <h1 className="text-5xl font-bold leading-tight">Create Account</h1>
             <p className="mt-5 text-lg text-white/90 leading-relaxed">
-              Register players and parents with smart academy linking, coach assignments,
-              attendance setup and fee tracking.
+              Register players and parents with smart academy linking, coach
+              assignments, attendance setup and fee tracking.
             </p>
 
             <div className="mt-10 space-y-4">
@@ -320,13 +376,19 @@ function Register() {
               </div>
 
               <div className="mb-6">
-                <label className="block font-semibold text-gray-700 mb-2">Register As</label>
+                <label className="block font-semibold text-gray-700 mb-2">
+                  Register As
+                </label>
                 <select
                   value={role}
                   onChange={(e) => {
                     setRole(e.target.value);
                     setErrors({});
                     setPopup("");
+                    setForm((prev) => ({
+                      ...prev,
+                      profilePhoto: "",
+                    }));
                   }}
                   className={inputClass}
                 >
@@ -337,19 +399,31 @@ function Register() {
 
               <div className="grid md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block font-medium text-gray-700 mb-2">Full Name</label>
-                  <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Enter full name" className={inputClass} />
+                  <label className="block font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter full name"
+                    className={inputClass}
+                  />
                   {errorText("fullName")}
                 </div>
 
                 <div>
-                  <label className="block font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
                   <input
                     name="email"
                     value={form.email}
                     onChange={handleChange}
                     onBlur={() => {
-                      if (role === "parent") autoFillParentData(form.email, form.phone);
+                      if (role === "parent") {
+                        autoFillParentData(form.email, form.phone);
+                      }
                     }}
                     placeholder="Enter email"
                     className={inputClass}
@@ -358,13 +432,17 @@ function Register() {
                 </div>
 
                 <div>
-                  <label className="block font-medium text-gray-700 mb-2">Phone Number</label>
+                  <label className="block font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
                   <input
                     name="phone"
                     value={form.phone}
                     onChange={handleChange}
                     onBlur={() => {
-                      if (role === "parent") autoFillParentData(form.email, form.phone);
+                      if (role === "parent") {
+                        autoFillParentData(form.email, form.phone);
+                      }
                     }}
                     placeholder="Enter 10 digit mobile number"
                     maxLength="10"
@@ -374,7 +452,9 @@ function Register() {
                 </div>
 
                 <div>
-                  <label className="block font-medium text-gray-700 mb-2">Password</label>
+                  <label className="block font-medium text-gray-700 mb-2">
+                    Password
+                  </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -398,28 +478,58 @@ function Register() {
 
               {role === "player" && (
                 <div className="mt-10">
-                  <h3 className="text-2xl font-bold text-green-700 mb-5">Player Details</h3>
+                  <h3 className="text-2xl font-bold text-green-700 mb-5">
+                    Player Details
+                  </h3>
 
                   <div className="grid md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Player ID</label>
-                      <input value={playerId} readOnly className={`${inputClass} bg-gray-100`} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Player ID
+                      </label>
+                      <input
+                        value={playerId}
+                        readOnly
+                        className={`${inputClass} bg-gray-100`}
+                      />
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Age</label>
-                      <input name="age" value={form.age} onChange={handleChange} placeholder="Enter age" maxLength="2" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Age
+                      </label>
+                      <input
+                        name="age"
+                        value={form.age}
+                        onChange={handleChange}
+                        placeholder="Enter age"
+                        maxLength="2"
+                        className={inputClass}
+                      />
                       {errorText("age")}
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Age Category</label>
-                      <input value={ageCategory || "Auto generated after age input"} readOnly className={`${inputClass} bg-gray-100`} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Age Category
+                      </label>
+                      <input
+                        value={ageCategory || "Auto generated after age input"}
+                        readOnly
+                        className={`${inputClass} bg-gray-100`}
+                      />
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Gender</label>
-                      <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Gender
+                      </label>
+                      <select
+                        name="gender"
+                        value={form.gender}
+                        onChange={handleChange}
+                        className={inputClass}
+                      >
                         <option value="">Select gender</option>
                         <option>Male</option>
                         <option>Female</option>
@@ -428,9 +538,42 @@ function Register() {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block font-medium text-gray-700 mb-3">Cricket Role</label>
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Profile Photo
+                      </label>
+                      <input
+                        type="file"
+                        name="profilePhoto"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className={`${inputClass} bg-white file:mr-4 file:rounded-xl file:border-0 file:bg-green-700 file:px-4 file:py-2 file:text-white`}
+                      />
+
+                      {form.profilePhoto && (
+                        <div className="mt-4 flex items-center gap-4">
+                          <img
+                            src={form.profilePhoto}
+                            alt="Preview"
+                            className="w-24 h-24 rounded-2xl object-cover border border-gray-300 shadow-sm"
+                          />
+                          <p className="text-sm text-gray-600">
+                            Player photo preview
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block font-medium text-gray-700 mb-3">
+                        Cricket Role
+                      </label>
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {["Batsman", "Bowler", "All Rounder", "Wicket Keeper"].map((item) => (
+                        {[
+                          "Batsman",
+                          "Bowler",
+                          "All Rounder",
+                          "Wicket Keeper",
+                        ].map((item) => (
                           <button
                             type="button"
                             key={item}
@@ -448,10 +591,19 @@ function Register() {
                       {errorText("playerRole")}
                     </div>
 
-                    {["Batsman", "Wicket Keeper", "All Rounder"].includes(form.playerRole) && (
+                    {["Batsman", "Wicket Keeper", "All Rounder"].includes(
+                      form.playerRole
+                    ) && (
                       <div>
-                        <label className="block font-medium text-gray-700 mb-2">Batting Style</label>
-                        <select name="battingStyle" value={form.battingStyle} onChange={handleChange} className={inputClass}>
+                        <label className="block font-medium text-gray-700 mb-2">
+                          Batting Style
+                        </label>
+                        <select
+                          name="battingStyle"
+                          value={form.battingStyle}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
                           <option value="">Select batting style</option>
                           <option>Right Hand Bat</option>
                           <option>Left Hand Bat</option>
@@ -462,8 +614,15 @@ function Register() {
 
                     {["Bowler", "All Rounder"].includes(form.playerRole) && (
                       <div>
-                        <label className="block font-medium text-gray-700 mb-2">Bowling Style</label>
-                        <select name="bowlingStyle" value={form.bowlingStyle} onChange={handleChange} className={inputClass}>
+                        <label className="block font-medium text-gray-700 mb-2">
+                          Bowling Style
+                        </label>
+                        <select
+                          name="bowlingStyle"
+                          value={form.bowlingStyle}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
                           <option value="">Select bowling style</option>
                           <option>Right Arm Fast</option>
                           <option>Right Arm Medium</option>
@@ -477,24 +636,51 @@ function Register() {
                     )}
                   </div>
 
-                  <h3 className="text-2xl font-bold text-green-700 mt-10 mb-5">Parent Linking Details</h3>
+                  <h3 className="text-2xl font-bold text-green-700 mt-10 mb-5">
+                    Parent Linking Details
+                  </h3>
 
                   <div className="grid md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Parent Name</label>
-                      <input name="parentName" value={form.parentName} onChange={handleChange} placeholder="Enter parent name" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Parent Name
+                      </label>
+                      <input
+                        name="parentName"
+                        value={form.parentName}
+                        onChange={handleChange}
+                        placeholder="Enter parent name"
+                        className={inputClass}
+                      />
                       {errorText("parentName")}
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Parent Phone</label>
-                      <input name="parentPhone" value={form.parentPhone} onChange={handleChange} placeholder="Enter 10 digit parent phone" maxLength="10" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Parent Phone
+                      </label>
+                      <input
+                        name="parentPhone"
+                        value={form.parentPhone}
+                        onChange={handleChange}
+                        placeholder="Enter 10 digit parent phone"
+                        maxLength="10"
+                        className={inputClass}
+                      />
                       {errorText("parentPhone")}
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block font-medium text-gray-700 mb-2">Parent Email</label>
-                      <input name="parentEmail" value={form.parentEmail} onChange={handleChange} placeholder="Enter parent gmail" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Parent Email
+                      </label>
+                      <input
+                        name="parentEmail"
+                        value={form.parentEmail}
+                        onChange={handleChange}
+                        placeholder="Enter parent gmail"
+                        className={inputClass}
+                      />
                       {errorText("parentEmail")}
                     </div>
                   </div>
@@ -503,29 +689,95 @@ function Register() {
 
               {role === "parent" && (
                 <div className="mt-10">
-                  <h3 className="text-2xl font-bold text-green-700 mb-5">Child / Player Linking Details</h3>
+                  <h3 className="text-2xl font-bold text-green-700 mb-5">
+                    Parent Details
+                  </h3>
+
+                  <div className="grid md:grid-cols-2 gap-5 mb-8">
+                    <div className="md:col-span-2">
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Parent Photo
+                      </label>
+                      <input
+                        type="file"
+                        name="profilePhoto"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className={`${inputClass} bg-white file:mr-4 file:rounded-xl file:border-0 file:bg-green-700 file:px-4 file:py-2 file:text-white`}
+                      />
+
+                      {form.profilePhoto && (
+                        <div className="mt-4 flex items-center gap-4">
+                          <img
+                            src={form.profilePhoto}
+                            alt="Parent Preview"
+                            className="w-24 h-24 rounded-2xl object-cover border border-gray-300 shadow-sm"
+                          />
+                          <p className="text-sm text-gray-600">
+                            Parent photo preview
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-green-700 mb-5">
+                    Child / Player Linking Details
+                  </h3>
 
                   <div className="grid md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Child Name</label>
-                      <input name="childName" value={form.childName} onChange={handleChange} placeholder="Enter child name" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Child Name
+                      </label>
+                      <input
+                        name="childName"
+                        value={form.childName}
+                        onChange={handleChange}
+                        placeholder="Enter child name"
+                        className={inputClass}
+                      />
                       {errorText("childName")}
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Child Age</label>
-                      <input name="childAge" value={form.childAge} onChange={handleChange} placeholder="Enter child age" maxLength="2" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Child Age
+                      </label>
+                      <input
+                        name="childAge"
+                        value={form.childAge}
+                        onChange={handleChange}
+                        placeholder="Enter child age"
+                        maxLength="2"
+                        className={inputClass}
+                      />
                       {errorText("childAge")}
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Child Player ID</label>
-                      <input name="childPlayerId" value={form.childPlayerId} onChange={handleChange} placeholder="Enter player ID if available" className={inputClass} />
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Child Player ID
+                      </label>
+                      <input
+                        name="childPlayerId"
+                        value={form.childPlayerId}
+                        onChange={handleChange}
+                        placeholder="Enter player ID if available"
+                        className={inputClass}
+                      />
                     </div>
 
                     <div>
-                      <label className="block font-medium text-gray-700 mb-2">Relation</label>
-                      <select name="relation" value={form.relation} onChange={handleChange} className={inputClass}>
+                      <label className="block font-medium text-gray-700 mb-2">
+                        Relation
+                      </label>
+                      <select
+                        name="relation"
+                        value={form.relation}
+                        onChange={handleChange}
+                        className={inputClass}
+                      >
                         <option value="">Select relation</option>
                         <option>Father</option>
                         <option>Mother</option>
@@ -543,7 +795,10 @@ function Register() {
 
               <p className="text-center text-gray-600 mt-6">
                 Already have an account?{" "}
-                <Link to="/login" className="text-green-700 font-semibold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-green-700 font-semibold hover:underline"
+                >
                   Login
                 </Link>
               </p>

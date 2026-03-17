@@ -8,6 +8,7 @@ function PlayerDashboard() {
   const [players, setPlayers] = useState([]);
   const [playerInfo, setPlayerInfo] = useState(null);
   const [playerAttendanceRecords, setPlayerAttendanceRecords] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
 
   const userEmail = localStorage.getItem("userEmail");
   const userName = localStorage.getItem("userName");
@@ -24,16 +25,22 @@ function PlayerDashboard() {
     const storedPlayers = JSON.parse(localStorage.getItem("players")) || [];
     const storedAttendance =
       JSON.parse(localStorage.getItem("playerAttendanceRecords")) || [];
+    const storedTournaments =
+      JSON.parse(localStorage.getItem("tournaments")) || [];
 
     setPlayers(storedPlayers);
     setPlayerAttendanceRecords(storedAttendance);
+    setTournaments(storedTournaments);
 
     const storedPlayerData = JSON.parse(localStorage.getItem("playerData"));
+
     if (storedPlayerData?.playerId) {
       const freshPlayer = storedPlayers.find(
         (player) => player.playerId === storedPlayerData.playerId
       );
+
       setPlayerInfo(freshPlayer || storedPlayerData);
+
       if (freshPlayer) {
         localStorage.setItem("playerData", JSON.stringify(freshPlayer));
       }
@@ -81,6 +88,24 @@ function PlayerDashboard() {
     );
   }, [playerInfo, playerAttendanceRecords]);
 
+  const eligibleTournaments = useMemo(() => {
+    if (!playerInfo) return tournaments;
+
+    return tournaments.filter((item) => {
+      if (!item.category || item.category.trim() === "") return true;
+
+      const tournamentCategory = item.category.toLowerCase();
+      const playerCategory = playerInfo.ageCategory?.toLowerCase() || "";
+      const playerRole = playerInfo.playerRole?.toLowerCase() || "";
+
+      return (
+        tournamentCategory.includes(playerCategory) ||
+        tournamentCategory.includes(playerRole) ||
+        tournamentCategory === "all"
+      );
+    });
+  }, [tournaments, playerInfo]);
+
   const liveAttendanceStats = useMemo(() => {
     const present = myAttendanceRecords.filter(
       (item) => item.status === "Present"
@@ -125,6 +150,7 @@ function PlayerDashboard() {
       }
 
       grouped[key].workingDays += 1;
+
       if (item.status === "Present") {
         grouped[key].presentDays += 1;
       }
@@ -156,92 +182,104 @@ function PlayerDashboard() {
       .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
   }, [myAttendanceRecords]);
 
+  const sidebarItems = [
+    { key: "profile", label: "My Profile", icon: "👤" },
+    { key: "attendance", label: "Attendance", icon: "📅" },
+    { key: "performance", label: "Performance", icon: "📈" },
+    { key: "coach", label: "My Coaches", icon: "🧑‍🏫" },
+    { key: "tournament", label: "Tournament", icon: "🏆" },
+  ];
+
   const renderContent = () => {
     if (activeTab === "profile") {
       return (
         <div>
-          <h3 className="text-2xl font-bold mb-4">My Profile</h3>
+          <h3 className="text-2xl font-bold mb-6">My Profile</h3>
 
           {playerInfo ? (
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Player Name</p>
-                <h4 className="text-xl font-bold mt-1">{playerInfo.fullName}</h4>
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row items-start gap-6 bg-white border rounded-2xl p-6">
+                <img
+                  src={
+                    playerInfo.profilePhoto ||
+                    "https://via.placeholder.com/140x140.png?text=Player"
+                  }
+                  alt="Player"
+                  className="w-32 h-32 rounded-3xl object-cover border shadow-sm"
+                />
+
+                <div className="min-w-0">
+                  <h4 className="text-2xl font-bold text-slate-900">
+                    {playerInfo.fullName || "-"}
+                  </h4>
+                  <p className="text-gray-600 mt-2">
+                    Player ID: {playerInfo.playerId || "-"}
+                  </p>
+                  <p className="text-gray-600">
+                    Role: {playerInfo.playerRole || "-"}
+                  </p>
+                  <p className="text-gray-600">
+                    Category: {playerInfo.ageCategory || "-"}
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Player ID</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.playerId || "-"}
-                </h4>
-              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Email</p>
+                  <h4 className="text-xl font-bold mt-1 break-words">
+                    {playerInfo.email || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Email</p>
-                <h4 className="text-xl font-bold mt-1 break-words">
-                  {playerInfo.email || "-"}
-                </h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Phone</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.phone || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Phone</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.phone || "-"}
-                </h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Age</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.age || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Age</p>
-                <h4 className="text-xl font-bold mt-1">{playerInfo.age || "-"}</h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Gender</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.gender || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Age Category</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.ageCategory || "-"}
-                </h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Batting Style</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.battingStyle || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Cricket Role</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.playerRole || "-"}
-                </h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Bowling Style</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.bowlingStyle || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Gender</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.gender || "-"}
-                </h4>
-              </div>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Parent Name</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.parentName || "-"}
+                  </h4>
+                </div>
 
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Batting Style</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.battingStyle || "-"}
-                </h4>
-              </div>
-
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Bowling Style</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.bowlingStyle || "-"}
-                </h4>
-              </div>
-
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Parent Name</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.parentName || "-"}
-                </h4>
-              </div>
-
-              <div className="bg-white border rounded-2xl p-4">
-                <p className="text-gray-500 text-sm">Parent Contact</p>
-                <h4 className="text-xl font-bold mt-1">
-                  {playerInfo.parentPhone || "-"}
-                </h4>
+                <div className="bg-white border rounded-2xl p-4">
+                  <p className="text-gray-500 text-sm">Parent Contact</p>
+                  <h4 className="text-xl font-bold mt-1">
+                    {playerInfo.parentPhone || "-"}
+                  </h4>
+                </div>
               </div>
             </div>
           ) : (
@@ -261,14 +299,14 @@ function PlayerDashboard() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-green-50 border rounded-xl p-4">
-                <p className="text-gray-600">Present Classes</p>
+                <p className="text-gray-600">Present</p>
                 <h4 className="text-3xl font-bold text-green-700 mt-2">
                   {liveAttendanceStats.present}
                 </h4>
               </div>
 
               <div className="bg-red-50 border rounded-xl p-4">
-                <p className="text-gray-600">Missed Classes</p>
+                <p className="text-gray-600">Absent</p>
                 <h4 className="text-3xl font-bold text-red-600 mt-2">
                   {liveAttendanceStats.absent}
                 </h4>
@@ -385,7 +423,7 @@ function PlayerDashboard() {
     if (activeTab === "performance") {
       return (
         <div>
-          <h3 className="text-2xl font-bold mb-4">Performance Summary</h3>
+          <h3 className="text-2xl font-bold mb-4">Performance Report</h3>
           <div className="space-y-4">
             <div className="bg-gray-50 border rounded-xl p-4">
               <p className="font-semibold">Batting</p>
@@ -397,7 +435,6 @@ function PlayerDashboard() {
                   : "Batting development can be monitored with future sessions."}
               </p>
             </div>
-
             <div className="bg-gray-50 border rounded-xl p-4">
               <p className="font-semibold">Bowling</p>
               <p className="text-gray-600">
@@ -406,12 +443,11 @@ function PlayerDashboard() {
                   : "Bowling metrics will improve based on role-specific practice."}
               </p>
             </div>
-
             <div className="bg-gray-50 border rounded-xl p-4">
-              <p className="font-semibold">Attendance Impact</p>
+              <p className="font-semibold">Discipline</p>
               <p className="text-gray-600">
-                Current attendance: {liveAttendanceStats.percentage}%.
-                Better attendance helps improve overall performance.
+                Current attendance: {liveAttendanceStats.percentage}%. Better
+                attendance helps improve overall performance.
               </p>
             </div>
           </div>
@@ -422,13 +458,12 @@ function PlayerDashboard() {
     if (activeTab === "coach") {
       return (
         <div>
-          <h3 className="text-2xl font-bold mb-4">My Coaches</h3>
-
+          <h3 className="text-2xl font-bold mb-4">Coach Information</h3>
           {playerInfo?.assignedCoachDetails?.length ? (
             <div className="space-y-4">
               {playerInfo.assignedCoachDetails.map((coach, index) => (
-                <div key={index} className="bg-blue-50 border rounded-xl p-5">
-                  <p className="font-semibold text-lg">{coach.name}</p>
+                <div key={index} className="bg-yellow-50 border rounded-xl p-5">
+                  <p className="font-semibold">{coach.name}</p>
                   <p className="text-gray-600 mt-2">{coach.role}</p>
                   <p className="text-gray-600 mt-1">{coach.email}</p>
                   <p className="text-gray-600 mt-1">
@@ -439,7 +474,7 @@ function PlayerDashboard() {
             </div>
           ) : (
             <div className="bg-gray-50 border rounded-xl p-4 text-gray-600">
-              No coach assigned yet.
+              No coach info available.
             </div>
           )}
         </div>
@@ -450,26 +485,46 @@ function PlayerDashboard() {
       return (
         <div>
           <h3 className="text-2xl font-bold mb-4">Tournament Updates</h3>
-          <div className="bg-yellow-50 border rounded-xl p-5">
-            <p className="text-gray-700">
-              Inter-Academy practice matches and academy selection events will
-              be shown here. Your role: {playerInfo?.playerRole || "-"}.
-            </p>
-          </div>
+
+          {eligibleTournaments.length === 0 ? (
+            <div className="bg-gray-50 border rounded-xl p-4 text-gray-600">
+              No tournaments available right now.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {eligibleTournaments.map((item) => (
+                <div key={item.id} className="bg-yellow-50 border rounded-xl p-5">
+                  <p className="font-semibold text-lg">
+                    {item.tournamentName || "Tournament"}
+                  </p>
+                  <p className="text-gray-600 mt-2">
+                    Location: {item.location || "-"}
+                  </p>
+                  <p className="text-gray-600 mt-1">
+                    Date: {item.startDate || "-"} to {item.endDate || "-"}
+                  </p>
+                  <p className="text-gray-600 mt-1">
+                    Category: {item.category || "All"}
+                  </p>
+                  <p className="text-gray-600 mt-1">
+                    Entry Fee: ₹{item.entryFee || 0}
+                  </p>
+                  <p className="text-gray-600 mt-1">
+                    Status: {item.status || "Upcoming"}
+                  </p>
+                  <p className="text-gray-700 mt-2">
+                    {item.description || "No description available."}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
 
     return null;
   };
-
-  const sidebarItems = [
-    { key: "profile", label: "My Profile", icon: "👤" },
-    { key: "attendance", label: "Attendance", icon: "📅" },
-    { key: "performance", label: "Performance", icon: "📈" },
-    { key: "coach", label: "My Coaches", icon: "🧑‍🏫" },
-    { key: "tournament", label: "Tournament", icon: "🏆" },
-  ];
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -481,7 +536,7 @@ function PlayerDashboard() {
             </p>
             <h2 className="text-3xl font-bold mt-3">Player Panel</h2>
             <p className="text-slate-400 text-sm mt-2 leading-6">
-              Welcome, {playerInfo?.fullName || userName || "Player"}.
+              View attendance, coach details, performance and tournament info.
             </p>
           </div>
 
@@ -515,16 +570,9 @@ function PlayerDashboard() {
         <main className="flex-1">
           <div className="lg:hidden px-4 pt-4">
             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">Player Menu</h3>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-semibold"
-                >
-                  Logout
-                </button>
-              </div>
-
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
+                Player Menu
+              </h3>
               <div className="grid grid-cols-2 gap-3">
                 {sidebarItems.map((item) => (
                   <button
@@ -539,6 +587,12 @@ function PlayerDashboard() {
                     {item.icon} {item.label}
                   </button>
                 ))}
+                <button
+                  onClick={handleLogout}
+                  className="col-span-2 bg-red-600 hover:bg-red-500 text-white rounded-2xl px-3 py-3 text-sm font-semibold"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
@@ -552,9 +606,38 @@ function PlayerDashboard() {
                 Player Dashboard
               </h1>
               <p className="text-gray-600 mt-3 max-w-3xl text-base leading-7">
-                View your attendance, coaches, performance and tournament
-                updates in one place.
+                Welcome, {playerInfo?.fullName || userName || "Player"}.
               </p>
+            </div>
+
+            <div className="grid md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-green-600">
+                <p className="text-gray-500">Player Name</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {playerInfo?.fullName || "-"}
+                </h3>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-blue-600">
+                <p className="text-gray-500">Attendance</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {liveAttendanceStats.percentage}%
+                </h3>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-yellow-500">
+                <p className="text-gray-500">Role</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {playerInfo?.playerRole || "-"}
+                </h3>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-purple-600">
+                <p className="text-gray-500">Coaches</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {assignedCoachNames.length}
+                </h3>
+              </div>
             </div>
 
             <div className="bg-white rounded-[30px] border border-gray-200 shadow-sm p-6 md:p-7 min-h-[520px]">

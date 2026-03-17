@@ -28,33 +28,163 @@ function Gallery() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 px-5 md:px-8 py-10">
-      <h2 className="text-5xl font-bold text-gray-900 mb-10 text-center">
-        Gallery
-      </h2>
+    <div className="min-h-screen bg-slate-100">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-slate-950 via-green-900 to-emerald-700 text-white pt-24 pb-20">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <p className="uppercase tracking-[0.3em] text-sm font-semibold text-green-300 mb-4">
+            Cricket Academy
+          </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {galleryItems.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300"
-          >
-            <img
-              src={item.img}
-              alt={item.title}
-              className="w-full h-56 object-cover"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
+          <h1 className="text-4xl md:text-6xl font-bold mb-5">Gallery</h1>
 
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {item.title}
-              </h3>
+          <p className="max-w-3xl mx-auto text-base md:text-xl text-white/85 leading-8">
+            Explore our academy training atmosphere, practice nets, batting
+            sessions and professional cricket development environment.
+          </p>
+        </div>
+      </section>
+
+      {/* Intro Cards */}
+      <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-10">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6">
+            <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center text-2xl mb-4">
+              🏏
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Skill Sessions
+            </h3>
+            <p className="text-gray-600 leading-7">
+              Focused batting, bowling and fielding training for all player
+              categories.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6">
+            <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center text-2xl mb-4">
+              🎯
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Practice Nets
+            </h3>
+            <p className="text-gray-600 leading-7">
+              Dedicated net sessions for technical improvement and match
+              preparation.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6">
+            <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center text-2xl mb-4">
+              📸
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Academy Moments
+            </h3>
+            <p className="text-gray-600 leading-7">
+              A glimpse into our daily coaching sessions and player development
+              journey.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Gallery Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+          <div>
+            <p className="text-green-700 font-semibold uppercase tracking-wider mb-2">
+              Photo Collection
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Training & Practice Gallery
+            </h2>
+          </div>
+
+          <p className="text-gray-600 max-w-2xl leading-7">
+            These images showcase our cricket coaching setup, batting practice
+            areas, training nets and academy environment.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
+          {galleryItems.map((item) => (
+            <div
+              key={item.id}
+              className="group bg-white rounded-[28px] overflow-hidden border border-gray-200 shadow-md hover:shadow-2xl transition duration-300"
+            >
+              <div className="overflow-hidden">
+                <img
+                  src={item.img}
+                  alt={item.title}
+                  className="w-full h-64 md:h-72 object-cover group-hover:scale-110 transition duration-500"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              <div className="p-5 md:p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {item.title}
+                  </h3>
+                  <span className="text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                    Photo
+                  </span>
+                </div>
+
+                <p className="text-gray-600 mt-3 leading-7">
+                  Professional academy practice environment and player
+                  development activity.
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Bottom Highlight */}
+      <section className="max-w-7xl mx-auto px-6 pb-16">
+        <div className="bg-gradient-to-r from-green-700 to-emerald-600 rounded-[32px] text-white p-8 md:p-12 shadow-xl">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <p className="uppercase tracking-[0.25em] text-sm font-semibold text-green-100 mb-3">
+                Academy Experience
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Every Session Builds Confidence
+              </h2>
+              <p className="text-white/90 leading-8">
+                Our gallery reflects the discipline, effort and professional
+                practice structure that help students grow into strong
+                cricketers.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/10 rounded-2xl p-5 text-center">
+                <h3 className="text-3xl font-bold">500+</h3>
+                <p className="mt-2 text-white/85">Students Trained</p>
+              </div>
+
+              <div className="bg-white/10 rounded-2xl p-5 text-center">
+                <h3 className="text-3xl font-bold">50+</h3>
+                <p className="mt-2 text-white/85">Matches Played</p>
+              </div>
+
+              <div className="bg-white/10 rounded-2xl p-5 text-center">
+                <h3 className="text-3xl font-bold">10+</h3>
+                <p className="mt-2 text-white/85">Expert Coaches</p>
+              </div>
+
+              <div className="bg-white/10 rounded-2xl p-5 text-center">
+                <h3 className="text-3xl font-bold">8+</h3>
+                <p className="mt-2 text-white/85">Years Experience</p>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

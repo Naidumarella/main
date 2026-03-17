@@ -81,6 +81,8 @@ function AdminDashboard() {
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
 
   const [feePayments, setFeePayments] = useState([]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [tournaments, setTournaments] = useState([]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -115,6 +117,7 @@ function AdminDashboard() {
     const storedCoaches = JSON.parse(localStorage.getItem("coaches"));
     const finalCoaches =
       storedCoaches && storedCoaches.length ? storedCoaches : defaultCoaches;
+
     setCoachList(finalCoaches);
     localStorage.setItem("coaches", JSON.stringify(finalCoaches));
 
@@ -133,6 +136,10 @@ function AdminDashboard() {
     const storedFeePayments =
       JSON.parse(localStorage.getItem("feePayments")) || [];
     setFeePayments(storedFeePayments);
+
+    const storedTournaments =
+      JSON.parse(localStorage.getItem("tournaments")) || [];
+    setTournaments(storedTournaments);
   }, [navigate]);
 
   const syncPlayers = (updatedPlayers) => {
@@ -145,10 +152,7 @@ function AdminDashboard() {
         (p) => p.playerId === playerData.playerId
       );
       if (refreshedLoggedPlayer) {
-        localStorage.setItem(
-          "playerData",
-          JSON.stringify(refreshedLoggedPlayer)
-        );
+        localStorage.setItem("playerData", JSON.stringify(refreshedLoggedPlayer));
       }
     }
   };
@@ -276,6 +280,46 @@ function AdminDashboard() {
     { key: "tournaments", label: "Tournaments", icon: "🏆" },
   ];
 
+  const renderPlayerPhoto = (player, size = "w-16 h-16") => {
+    if (player?.profilePhoto) {
+      return (
+        <img
+          src={player.profilePhoto}
+          alt={player.fullName || "Player"}
+          className={`${size} rounded-2xl object-cover border border-gray-200 shadow-sm`}
+        />
+      );
+    }
+
+    return (
+      <div
+        className={`${size} rounded-2xl bg-green-100 text-green-700 flex items-center justify-center font-bold border border-green-200 shadow-sm`}
+      >
+        {player?.fullName?.charAt(0)?.toUpperCase() || "P"}
+      </div>
+    );
+  };
+
+  const renderParentPhoto = (parent, size = "w-16 h-16") => {
+    if (parent?.profilePhoto) {
+      return (
+        <img
+          src={parent.profilePhoto}
+          alt={parent.fullName || "Parent"}
+          className={`${size} rounded-2xl object-cover border border-gray-200 shadow-sm`}
+        />
+      );
+    }
+
+    return (
+      <div
+        className={`${size} rounded-2xl bg-violet-100 text-violet-700 flex items-center justify-center font-bold border border-violet-200 shadow-sm`}
+      >
+        {parent?.fullName?.charAt(0)?.toUpperCase() || "P"}
+      </div>
+    );
+  };
+
   const openAssignPanel = (player) => {
     setSelectedPlayer(player);
     setSelectedCoaches(player.assignedCoaches || []);
@@ -373,6 +417,7 @@ function AdminDashboard() {
       parentName,
       parentEmail,
       parentPhone,
+      profilePhoto: "",
       assignedCoaches: [],
       assignedCoachDetails: [],
       fee: {
@@ -540,8 +585,8 @@ function AdminDashboard() {
   const renderDashboardTab = () => {
     return (
       <div className="space-y-6">
-        <div className="bg-slate-50 rounded-[28px] border border-slate-200 p-6">
-          <h3 className="text-2xl font-bold text-slate-900 mb-5">
+        <div className="bg-slate-50 rounded-3xl border border-slate-200 p-4 md:p-6">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-5">
             Recent Activities
           </h3>
 
@@ -583,8 +628,7 @@ function AdminDashboard() {
               <div>
                 <p className="font-semibold text-gray-900">Fee Collection</p>
                 <p className="text-gray-600 text-sm mt-1">
-                  Collected: ₹{totalFeesCollected} • Pending: ₹
-                  {totalPendingFees}
+                  Collected: ₹{totalFeesCollected} • Pending: ₹{totalPendingFees}
                 </p>
               </div>
             </div>
@@ -597,16 +641,18 @@ function AdminDashboard() {
   const renderPlayersTab = () => {
     return (
       <div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h3 className="text-2xl font-bold text-slate-900">Manage Players</h3>
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+            Manage Players
+          </h3>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
             <input
               type="text"
               placeholder="Search by name, ID, role, parent..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border border-gray-300 rounded-2xl px-4 py-3 w-full md:w-[360px] outline-none focus:border-green-600"
+              className="border border-gray-300 rounded-2xl px-4 py-3 w-full xl:w-[360px] outline-none focus:border-green-600"
             />
 
             <button
@@ -630,30 +676,34 @@ function AdminDashboard() {
             {filteredPlayers.map((player, index) => (
               <div
                 key={index}
-                className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm"
+                className="bg-white border border-gray-200 rounded-3xl p-4 md:p-5 shadow-sm"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-slate-900 text-lg">
-                      {player.fullName}
-                    </p>
-                    <p className="text-gray-600 mt-1">
-                      ID: {player.playerId} • Role: {player.playerRole} •
-                      Category: {player.ageCategory}
-                    </p>
-                    <p className="text-gray-600 mt-1">
-                      Fee: {player.fee?.status || "Pending"} • Monthly Fee ₹
-                      {player.fee?.monthlyFee || 0}
-                    </p>
-                    <p className="text-gray-600 mt-1">
-                      Coaches:{" "}
-                      {player.assignedCoachDetails?.length
-                        ? player.assignedCoachDetails.map((c) => c.name).join(", ")
-                        : "Not assigned"}
-                    </p>
+                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0">
+                    {renderPlayerPhoto(player)}
+
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-900 text-lg break-words">
+                        {player.fullName}
+                      </p>
+                      <p className="text-gray-600 mt-1 text-sm md:text-base break-words">
+                        ID: {player.playerId} • Role: {player.playerRole} • Category:{" "}
+                        {player.ageCategory}
+                      </p>
+                      <p className="text-gray-600 mt-1 text-sm md:text-base break-words">
+                        Fee: {player.fee?.status || "Pending"} • Monthly Fee ₹
+                        {player.fee?.monthlyFee || 0}
+                      </p>
+                      <p className="text-gray-600 mt-1 text-sm md:text-base break-words">
+                        Coaches:{" "}
+                        {player.assignedCoachDetails?.length
+                          ? player.assignedCoachDetails.map((c) => c.name).join(", ")
+                          : "Not assigned"}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
                     <button
                       onClick={() => openAssignPanel(player)}
                       className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-medium"
@@ -675,8 +725,8 @@ function AdminDashboard() {
         )}
 
         {showAddPlayer && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
-            <div className="bg-white w-full max-w-3xl rounded-[28px] shadow-2xl p-7 relative max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-3 md:px-4 z-50">
+            <div className="bg-white w-full max-w-3xl rounded-[28px] shadow-2xl p-4 md:p-7 relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={() => setShowAddPlayer(false)}
                 className="absolute top-4 right-5 text-2xl text-gray-500 hover:text-black"
@@ -684,7 +734,7 @@ function AdminDashboard() {
                 ×
               </button>
 
-              <h3 className="text-3xl font-bold text-slate-900 mb-6">
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
                 Add New Player
               </h3>
 
@@ -774,7 +824,7 @@ function AdminDashboard() {
                 <p className="text-red-500 text-sm mt-4">{playerError}</p>
               )}
 
-              <div className="flex gap-3 mt-7">
+              <div className="flex flex-col sm:flex-row gap-3 mt-7">
                 <button
                   onClick={addPlayer}
                   className="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-2xl font-semibold"
@@ -794,8 +844,8 @@ function AdminDashboard() {
         )}
 
         {selectedPlayer && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
-            <div className="bg-white w-full max-w-2xl rounded-[28px] shadow-2xl p-7 relative">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-3 md:px-4 z-50">
+            <div className="bg-white w-full max-w-2xl rounded-[28px] shadow-2xl p-4 md:p-7 relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={closeAssignPanel}
                 className="absolute top-4 right-5 text-2xl text-gray-500 hover:text-black"
@@ -803,13 +853,15 @@ function AdminDashboard() {
                 ×
               </button>
 
-              <h3 className="text-3xl font-bold text-slate-900 mb-2">
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
                 Assign Coaches
               </h3>
-              <p className="text-gray-600 mb-6">
-                Player:{" "}
-                <span className="font-semibold">{selectedPlayer.fullName}</span>
-              </p>
+              <div className="flex items-center gap-3 mb-6">
+                {renderPlayerPhoto(selectedPlayer, "w-14 h-14")}
+                <p className="text-gray-600">
+                  Player: <span className="font-semibold">{selectedPlayer.fullName}</span>
+                </p>
+              </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 {coachList.map((coach, index) => {
@@ -846,7 +898,7 @@ function AdminDashboard() {
                 })}
               </div>
 
-              <div className="flex gap-3 mt-7">
+              <div className="flex flex-col sm:flex-row gap-3 mt-7">
                 <button
                   onClick={saveCoachAssignment}
                   className="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-2xl font-semibold"
@@ -871,15 +923,17 @@ function AdminDashboard() {
   const renderParentsTab = () => {
     return (
       <div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h3 className="text-2xl font-bold text-slate-900">Manage Parents</h3>
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+            Manage Parents
+          </h3>
 
           <input
             type="text"
             placeholder="Search by name, email, phone, child..."
             value={parentSearch}
             onChange={(e) => setParentSearch(e.target.value)}
-            className="border border-gray-300 rounded-2xl px-4 py-3 w-full md:w-[360px] outline-none focus:border-green-600"
+            className="border border-gray-300 rounded-2xl px-4 py-3 w-full xl:w-[360px] outline-none focus:border-green-600"
           />
         </div>
 
@@ -895,37 +949,35 @@ function AdminDashboard() {
               return (
                 <div
                   key={index}
-                  className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm"
+                  className="bg-white border border-gray-200 rounded-3xl p-4 md:p-5 shadow-sm"
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <p className="font-semibold text-slate-900 text-lg">
-                        {parent.fullName}
-                      </p>
-                      <p className="text-gray-600 mt-1">
-                        Email: {parent.email || "-"}
-                      </p>
-                      <p className="text-gray-600 mt-1">
-                        Phone: {parent.phone || "-"}
-                      </p>
-                      <p className="text-gray-600 mt-1">
-                        Relation: {parent.relation || "-"}
-                      </p>
-                      <p className="text-gray-600 mt-1">
-                        Child:{" "}
-                        {linkedChild?.fullName ||
-                          parent.childName ||
-                          "Not linked"}
-                      </p>
-                      <p className="text-gray-600 mt-1">
-                        Child ID:{" "}
-                        {linkedChild?.playerId ||
-                          parent.childPlayerId ||
-                          "-"}
-                      </p>
+                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                    <div className="flex items-start gap-4 min-w-0">
+                      {renderParentPhoto(parent)}
+
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 text-lg break-words">
+                          {parent.fullName}
+                        </p>
+                        <p className="text-gray-600 mt-1 break-words">
+                          Email: {parent.email || "-"}
+                        </p>
+                        <p className="text-gray-600 mt-1 break-words">
+                          Phone: {parent.phone || "-"}
+                        </p>
+                        <p className="text-gray-600 mt-1 break-words">
+                          Relation: {parent.relation || "-"}
+                        </p>
+                        <p className="text-gray-600 mt-1 break-words">
+                          Child: {linkedChild?.fullName || parent.childName || "Not linked"}
+                        </p>
+                        <p className="text-gray-600 mt-1 break-words">
+                          Child ID: {linkedChild?.playerId || parent.childPlayerId || "-"}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3">
+                    <div className="bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3 self-start">
                       <p className="text-sm text-violet-700 font-semibold">
                         Parent Account
                       </p>
@@ -943,8 +995,10 @@ function AdminDashboard() {
   const renderCoachesTab = () => {
     return (
       <div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h3 className="text-2xl font-bold text-slate-900">Manage Coaches</h3>
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+            Manage Coaches
+          </h3>
 
           <button
             onClick={() => {
@@ -961,14 +1015,14 @@ function AdminDashboard() {
           {coachSummary.map((coach, index) => (
             <div
               key={index}
-              className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm"
+              className="bg-white border border-gray-200 rounded-3xl p-4 md:p-5 shadow-sm"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <p className="font-semibold text-slate-900">{coach.name}</p>
-                  <p className="text-gray-600 mt-1">{coach.role}</p>
-                  <p className="text-gray-600 mt-1">{coach.email}</p>
-                  <p className="text-gray-600 mt-1">Timing: {coach.time}</p>
+              <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900 break-words">{coach.name}</p>
+                  <p className="text-gray-600 mt-1 break-words">{coach.role}</p>
+                  <p className="text-gray-600 mt-1 break-words">{coach.email}</p>
+                  <p className="text-gray-600 mt-1 break-words">Timing: {coach.time}</p>
                   <p className="text-green-700 font-semibold mt-2">
                     Assigned Players: {coach.count}
                   </p>
@@ -986,8 +1040,8 @@ function AdminDashboard() {
         </div>
 
         {showAddCoach && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
-            <div className="bg-white w-full max-w-xl rounded-[28px] shadow-2xl p-7 relative">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-3 md:px-4 z-50">
+            <div className="bg-white w-full max-w-xl rounded-[28px] shadow-2xl p-4 md:p-7 relative max-h-[90vh] overflow-y-auto">
               <button
                 onClick={() => setShowAddCoach(false)}
                 className="absolute top-4 right-5 text-2xl text-gray-500 hover:text-black"
@@ -995,7 +1049,7 @@ function AdminDashboard() {
                 ×
               </button>
 
-              <h3 className="text-3xl font-bold text-slate-900 mb-6">
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
                 Add New Coach
               </h3>
 
@@ -1057,7 +1111,7 @@ function AdminDashboard() {
                 <p className="text-red-500 text-sm mt-4">{coachError}</p>
               )}
 
-              <div className="flex gap-3 mt-7">
+              <div className="flex flex-col sm:flex-row gap-3 mt-7">
                 <button
                   onClick={addCoach}
                   className="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-2xl font-semibold"
@@ -1159,31 +1213,33 @@ function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h3 className="text-2xl font-bold text-slate-900">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
             Player Attendance
           </h3>
           <p className="text-gray-600 font-medium">Date: {today}</p>
         </div>
 
-        <div className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[26px] border border-gray-200 bg-white p-4 md:p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h4 className="text-2xl font-bold text-slate-900">Attendance</h4>
-              <div className="mt-6 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-50 text-4xl">
+              <h4 className="text-xl md:text-2xl font-bold text-slate-900">
+                Attendance
+              </h4>
+              <div className="mt-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-indigo-50 text-3xl md:text-4xl">
                 👦
               </div>
             </div>
 
-            <div className="text-right">
-              <h2 className="text-5xl font-bold text-blue-900">
+            <div className="text-left md:text-right">
+              <h2 className="text-3xl md:text-5xl font-bold text-blue-900">
                 {overallPercentage}%
               </h2>
-              <p className="mt-2 text-lg text-slate-400">Percentage</p>
+              <p className="mt-2 text-base md:text-lg text-slate-400">Percentage</p>
             </div>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="bg-green-50 border border-green-100 rounded-[24px] p-5">
             <p className="text-gray-500">Today Present Players</p>
             <h4 className="text-3xl font-bold text-green-700 mt-2">
@@ -1199,8 +1255,8 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-[26px] p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-slate-900 mb-4">
+        <div className="bg-white border border-gray-200 rounded-[26px] p-4 md:p-5 shadow-sm">
+          <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-4">
             View Player Attendance Details
           </h4>
 
@@ -1223,21 +1279,22 @@ function AdminDashboard() {
 
         {selectedPlayerData && (
           <>
-            <div className="rounded-[26px] border border-gray-200 bg-slate-50 p-5">
-              <h4 className="text-xl font-bold text-slate-900 mb-5">
-                {selectedPlayerData.player.fullName} - Monthly Attendance
-              </h4>
+            <div className="rounded-[26px] border border-gray-200 bg-slate-50 p-4 md:p-5">
+              <div className="flex items-center gap-4 mb-5">
+                {renderPlayerPhoto(selectedPlayerData.player, "w-16 h-16")}
+                <h4 className="text-lg md:text-xl font-bold text-slate-900 break-words">
+                  {selectedPlayerData.player.fullName} - Monthly Attendance
+                </h4>
+              </div>
 
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {selectedPlayerData.monthCards.length === 0 ? (
-                  <div className="text-gray-500">
-                    No monthly attendance found.
-                  </div>
+                  <div className="text-gray-500">No monthly attendance found.</div>
                 ) : (
                   selectedPlayerData.monthCards.map((item, index) => (
                     <div
                       key={index}
-                      className="bg-white border border-gray-300 rounded-2xl p-5 shadow-sm"
+                      className="bg-white border border-gray-300 rounded-2xl p-4 md:p-5 shadow-sm"
                     >
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-start gap-4">
@@ -1247,25 +1304,21 @@ function AdminDashboard() {
                           </div>
 
                           <div>
-                            <p className="text-lg text-slate-900">
-                              <span className="font-bold">
-                                {item.presentDays}
-                              </span>{" "}
+                            <p className="text-base md:text-lg text-slate-900">
+                              <span className="font-bold">{item.presentDays}</span>{" "}
                               Present Days
                             </p>
-                            <p className="text-lg text-slate-900">
-                              <span className="font-bold">
-                                {item.workingDays}
-                              </span>{" "}
+                            <p className="text-base md:text-lg text-slate-900">
+                              <span className="font-bold">{item.workingDays}</span>{" "}
                               Working Days
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <h3 className="text-4xl font-bold text-blue-900">
+                          <h3 className="text-3xl md:text-4xl font-bold text-blue-900">
                             {item.percentage}
-                            <span className="text-2xl">%</span>
+                            <span className="text-xl md:text-2xl">%</span>
                           </h3>
                         </div>
                       </div>
@@ -1275,22 +1328,25 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-[26px] p-5 shadow-sm">
-              <h4 className="text-xl font-bold text-slate-900 mb-4">
-                {selectedPlayerData.player.fullName} - Everyday Attendance
-              </h4>
+            <div className="bg-white border border-gray-200 rounded-[26px] p-4 md:p-5 shadow-sm">
+              <div className="flex items-center gap-4 mb-4">
+                {renderPlayerPhoto(selectedPlayerData.player, "w-16 h-16")}
+                <h4 className="text-lg md:text-xl font-bold text-slate-900 break-words">
+                  {selectedPlayerData.player.fullName} - Everyday Attendance
+                </h4>
+              </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full">
+                <table className="min-w-full min-w-[640px]">
                   <thead>
                     <tr className="border-b border-gray-200 text-left">
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Date
                       </th>
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Session
                       </th>
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Status
                       </th>
                     </tr>
@@ -1307,13 +1363,8 @@ function AdminDashboard() {
                       </tr>
                     ) : (
                       selectedPlayerDailyRecords.map((record) => (
-                        <tr
-                          key={record.id}
-                          className="border-b border-gray-200"
-                        >
-                          <td className="py-3 px-4 text-slate-800">
-                            {record.date}
-                          </td>
+                        <tr key={record.id} className="border-b border-gray-200">
+                          <td className="py-3 px-4 text-slate-800">{record.date}</td>
                           <td className="py-3 px-4 text-slate-800">
                             {record.session}
                           </td>
@@ -1421,31 +1472,33 @@ function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h3 className="text-2xl font-bold text-slate-900">
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
             Coach Attendance
           </h3>
           <p className="text-gray-600 font-medium">Date: {today}</p>
         </div>
 
-        <div className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[26px] border border-gray-200 bg-white p-4 md:p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h4 className="text-2xl font-bold text-slate-900">Attendance</h4>
-              <div className="mt-6 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-50 text-4xl">
+              <h4 className="text-xl md:text-2xl font-bold text-slate-900">
+                Attendance
+              </h4>
+              <div className="mt-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-indigo-50 text-3xl md:text-4xl">
                 👨‍🏫
               </div>
             </div>
 
-            <div className="text-right">
-              <h2 className="text-5xl font-bold text-blue-900">
+            <div className="text-left md:text-right">
+              <h2 className="text-3xl md:text-5xl font-bold text-blue-900">
                 {overallPercentage}%
               </h2>
-              <p className="mt-2 text-lg text-slate-400">Percentage</p>
+              <p className="mt-2 text-base md:text-lg text-slate-400">Percentage</p>
             </div>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="bg-green-50 border border-green-100 rounded-[24px] p-5">
             <p className="text-gray-500">Today Present Coaches</p>
             <h4 className="text-3xl font-bold text-green-700 mt-2">
@@ -1461,8 +1514,8 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-[26px] p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-slate-900 mb-4">
+        <div className="bg-white border border-gray-200 rounded-[26px] p-4 md:p-5 shadow-sm">
+          <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-4">
             Admin Maintain Coach Attendance
           </h4>
 
@@ -1475,13 +1528,13 @@ function AdminDashboard() {
               return (
                 <div
                   key={index}
-                  className="border border-gray-200 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+                  className="border border-gray-200 rounded-2xl p-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-900 text-lg">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900 text-lg break-words">
                       {coach.name}
                     </p>
-                    <p className="text-gray-600 mt-1">{coach.role}</p>
+                    <p className="text-gray-600 mt-1 break-words">{coach.role}</p>
                     <p className="text-gray-600 mt-1">
                       Today Status:{" "}
                       <span
@@ -1498,7 +1551,7 @@ function AdminDashboard() {
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
                     <button
                       onClick={() => markCoachAttendance(coach.email, "Present")}
                       className={`px-5 py-2.5 rounded-xl font-semibold text-white ${
@@ -1527,8 +1580,8 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-[26px] p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-slate-900 mb-4">
+        <div className="bg-white border border-gray-200 rounded-[26px] p-4 md:p-5 shadow-sm">
+          <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-4">
             View Coach Attendance Details
           </h4>
 
@@ -1547,21 +1600,19 @@ function AdminDashboard() {
 
         {selectedCoachData && (
           <>
-            <div className="rounded-[26px] border border-gray-200 bg-slate-50 p-5">
-              <h4 className="text-xl font-bold text-slate-900 mb-5">
+            <div className="rounded-[26px] border border-gray-200 bg-slate-50 p-4 md:p-5">
+              <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-5 break-words">
                 {selectedCoachData.coach.name} - Monthly Attendance
               </h4>
 
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {selectedCoachData.monthCards.length === 0 ? (
-                  <div className="text-gray-500">
-                    No monthly attendance found.
-                  </div>
+                  <div className="text-gray-500">No monthly attendance found.</div>
                 ) : (
                   selectedCoachData.monthCards.map((item, index) => (
                     <div
                       key={index}
-                      className="bg-white border border-gray-300 rounded-2xl p-5 shadow-sm"
+                      className="bg-white border border-gray-300 rounded-2xl p-4 md:p-5 shadow-sm"
                     >
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-start gap-4">
@@ -1571,25 +1622,21 @@ function AdminDashboard() {
                           </div>
 
                           <div>
-                            <p className="text-lg text-slate-900">
-                              <span className="font-bold">
-                                {item.presentDays}
-                              </span>{" "}
+                            <p className="text-base md:text-lg text-slate-900">
+                              <span className="font-bold">{item.presentDays}</span>{" "}
                               Present Days
                             </p>
-                            <p className="text-lg text-slate-900">
-                              <span className="font-bold">
-                                {item.workingDays}
-                              </span>{" "}
+                            <p className="text-base md:text-lg text-slate-900">
+                              <span className="font-bold">{item.workingDays}</span>{" "}
                               Working Days
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <h3 className="text-4xl font-bold text-blue-900">
+                          <h3 className="text-3xl md:text-4xl font-bold text-blue-900">
                             {item.percentage}
-                            <span className="text-2xl">%</span>
+                            <span className="text-xl md:text-2xl">%</span>
                           </h3>
                         </div>
                       </div>
@@ -1599,22 +1646,22 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-[26px] p-5 shadow-sm">
-              <h4 className="text-xl font-bold text-slate-900 mb-4">
+            <div className="bg-white border border-gray-200 rounded-[26px] p-4 md:p-5 shadow-sm">
+              <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-4 break-words">
                 {selectedCoachData.coach.name} - Everyday Attendance
               </h4>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full">
+                <table className="min-w-full min-w-[640px]">
                   <thead>
                     <tr className="border-b border-gray-200 text-left">
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Date
                       </th>
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Session
                       </th>
-                      <th className="py-3 px-4 text-blue-900 text-xl font-bold">
+                      <th className="py-3 px-4 text-blue-900 text-lg md:text-xl font-bold">
                         Status
                       </th>
                     </tr>
@@ -1631,13 +1678,8 @@ function AdminDashboard() {
                       </tr>
                     ) : (
                       selectedCoachDailyRecords.map((record) => (
-                        <tr
-                          key={record.id}
-                          className="border-b border-gray-200"
-                        >
-                          <td className="py-3 px-4 text-slate-800">
-                            {record.date}
-                          </td>
+                        <tr key={record.id} className="border-b border-gray-200">
+                          <td className="py-3 px-4 text-slate-800">{record.date}</td>
                           <td className="py-3 px-4 text-slate-800">
                             {record.session}
                           </td>
@@ -1669,10 +1711,12 @@ function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h3 className="text-2xl font-bold text-slate-900">Fee Payment</h3>
+          <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+            Fee Payment
+          </h3>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="bg-green-50 border border-green-100 rounded-[24px] p-5">
             <p className="text-gray-500">Fees Collected</p>
             <h4 className="text-3xl font-bold text-green-700 mt-2">
@@ -1688,7 +1732,7 @@ function AdminDashboard() {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-[26px] overflow-x-auto shadow-sm">
-          <table className="min-w-full">
+          <table className="min-w-full min-w-[640px]">
             <thead className="bg-gray-100">
               <tr className="text-left">
                 <th className="px-4 py-3">Player Name</th>
@@ -1736,16 +1780,85 @@ function AdminDashboard() {
 
   const renderTournamentsTab = () => {
     return (
-      <div>
-        <h3 className="text-2xl font-bold text-slate-900 mb-5">
-          Tournament Management
-        </h3>
-        <div className="space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-[24px] p-5">
-            <p className="font-semibold text-slate-900">Inter Academy Cup</p>
-            <p className="text-gray-600 mt-1">No tournaments created yet.</p>
+      <div className="space-y-6">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+              Tournament Management
+            </h3>
+            <p className="text-gray-600 mt-2">
+              Create, update and manage tournaments from a dedicated page.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate("/tournaments")}
+            className="bg-green-700 hover:bg-green-600 text-white px-5 py-3 rounded-2xl font-semibold w-full sm:w-auto"
+          >
+            Open Tournament Page
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm">
+            <p className="text-gray-500">Total Tournaments</p>
+            <h4 className="text-3xl font-bold text-slate-900 mt-2">
+              {tournaments.length}
+            </h4>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm">
+            <p className="text-gray-500">Upcoming</p>
+            <h4 className="text-3xl font-bold text-blue-700 mt-2">
+              {tournaments.filter((item) => item.status === "Upcoming").length}
+            </h4>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm">
+            <p className="text-gray-500">Open / Active</p>
+            <h4 className="text-3xl font-bold text-green-700 mt-2">
+              {
+                tournaments.filter((item) =>
+                  ["Open", "Active"].includes(item.status)
+                ).length
+              }
+            </h4>
           </div>
         </div>
+
+        {tournaments.length === 0 ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-[24px] p-5">
+            <p className="font-semibold text-slate-900">No tournaments yet</p>
+            <p className="text-gray-600 mt-1">
+              Click <span className="font-medium">Open Tournament Page</span> to add a tournament.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {tournaments.slice(0, 5).map((item) => (
+              <div
+                key={item.id}
+                className="bg-white border border-gray-200 rounded-[24px] p-5 shadow-sm"
+              >
+                <p className="font-semibold text-slate-900 text-lg break-words">
+                  {item.tournamentName}
+                </p>
+                <p className="text-gray-600 mt-1 break-words">
+                  Location: {item.location || "-"}
+                </p>
+                <p className="text-gray-600 mt-1 break-words">
+                  Date: {item.startDate || "-"} to {item.endDate || "-"}
+                </p>
+                <p className="text-gray-600 mt-1 break-words">
+                  Category: {item.category || "All"}
+                </p>
+                <p className="text-gray-600 mt-1 break-words">
+                  Status: {item.status || "Upcoming"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -1765,22 +1878,45 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="flex min-h-screen">
-        <aside className="hidden lg:flex w-72 bg-slate-950 text-white flex-col shadow-2xl">
-          <div className="px-6 py-7 border-b border-slate-800">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-green-400">
-              Cricket Academy
-            </p>
-            <h2 className="text-3xl font-bold mt-3">Admin Panel</h2>
-            <p className="text-slate-400 text-sm mt-2 leading-6">
-              Manage players, parents, coaches, attendance and fee records.
-            </p>
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
+        <aside
+          className={`fixed lg:static top-0 left-0 z-50 h-full w-72 bg-slate-950 text-white flex flex-col shadow-2xl transform transition-transform duration-300 ${
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
+        >
+          <div className="px-6 py-7 border-b border-slate-800 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-green-400">
+                Cricket Academy
+              </p>
+              <h2 className="text-3xl font-bold mt-3">Admin Panel</h2>
+              <p className="text-slate-400 text-sm mt-2 leading-6">
+                Manage players, parents, coaches, attendance and fee records.
+              </p>
+            </div>
+
+            <button
+              className="lg:hidden text-white text-2xl"
+              onClick={() => setMobileSidebarOpen(false)}
+            >
+              ×
+            </button>
           </div>
 
-          <div className="flex-1 px-4 py-5 space-y-2">
+          <div className="flex-1 px-4 py-5 space-y-2 overflow-y-auto">
             {sidebarItems.map((item) => (
               <button
                 key={item.key}
-                onClick={() => setActiveTab(item.key)}
+                onClick={() => {
+                  setActiveTab(item.key);
+                  setMobileSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left font-medium transition-all duration-200 ${
                   activeTab === item.key
                     ? "bg-green-600 text-white shadow-lg"
@@ -1824,68 +1960,54 @@ function AdminDashboard() {
           </div>
         </aside>
 
-        <main className="flex-1">
-          <div className="lg:hidden px-4 pt-4">
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">
-                Admin Menu
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {sidebarItems.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => setActiveTab(item.key)}
-                    className={`rounded-2xl px-3 py-3 text-sm font-semibold ${
-                      activeTab === item.key
-                        ? "bg-green-700 text-white"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {item.icon} {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
+        <main className="flex-1 min-w-0">
           <div className="p-4 md:p-6 lg:p-8">
-            <div className="mb-8 rounded-[28px] bg-white border border-gray-200 shadow-sm px-6 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-green-700 mb-2">
-                  Academy Control Panel
-                </p>
-                <h1 className="text-4xl md:text-5xl font-bold text-slate-900">
-                  Admin Dashboard
-                </h1>
-                <p className="text-gray-600 mt-3 max-w-3xl text-base leading-7">
-                  Manage players, parents, coaches, attendance and academy operations
-                  from one premium dashboard.
-                </p>
+            <div className="mb-6 md:mb-8 rounded-[28px] bg-white border border-gray-200 shadow-sm px-4 md:px-6 py-5 md:py-7 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="lg:hidden bg-slate-900 text-white px-4 py-3 rounded-2xl font-semibold"
+                >
+                  ☰
+                </button>
+
+                <div>
+                  <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.22em] text-green-700 mb-2">
+                    Academy Control Panel
+                  </p>
+                  <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900">
+                    Admin Dashboard
+                  </h1>
+                  <p className="text-gray-600 mt-3 max-w-3xl text-sm md:text-base leading-6 md:leading-7">
+                    Manage players, parents, coaches, attendance and academy
+                    operations from one premium dashboard.
+                  </p>
+                </div>
               </div>
 
               <button
                 onClick={handleAdminLogout}
-                className="bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-2xl font-semibold"
+                className="bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-2xl font-semibold w-full sm:w-auto"
               >
                 Logout
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-5 gap-4 md:gap-6 mb-8">
               {stats.map((item, index) => (
                 <div
                   key={index}
                   className="bg-white rounded-[28px] border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg transition"
                 >
                   <div className={`h-2 bg-gradient-to-r ${item.color}`}></div>
-                  <div className="p-6">
+                  <div className="p-5 md:p-6">
                     <div
-                      className={`w-16 h-16 rounded-2xl ${item.bg} flex items-center justify-center text-3xl mb-5`}
+                      className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl ${item.bg} flex items-center justify-center text-2xl md:text-3xl mb-5`}
                     >
                       {item.icon}
                     </div>
-                    <p className="text-gray-500 text-lg">{item.title}</p>
-                    <h3 className="text-4xl font-bold text-slate-900 mt-2">
+                    <p className="text-gray-500 text-base md:text-lg">{item.title}</p>
+                    <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 break-words">
                       {item.value}
                     </h3>
                   </div>
@@ -1893,7 +2015,7 @@ function AdminDashboard() {
               ))}
             </div>
 
-            <div className="bg-white rounded-[30px] border border-gray-200 shadow-sm p-6 md:p-7 min-h-[520px]">
+            <div className="bg-white rounded-[30px] border border-gray-200 shadow-sm p-4 md:p-6 lg:p-7 min-h-[520px]">
               {renderContent()}
             </div>
           </div>

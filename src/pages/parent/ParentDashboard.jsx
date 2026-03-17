@@ -257,6 +257,18 @@ function ParentDashboard() {
         <div>
           <h3 className="text-2xl font-bold mb-4">My Profile</h3>
 
+          <div className="mb-6 flex flex-col items-center md:items-start">
+            <img
+              src={
+                parentData?.profilePhoto ||
+                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+              }
+              alt="Parent"
+              className="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-lg"
+            />
+            <p className="mt-3 text-gray-600 font-medium">Parent Photo</p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white border rounded-2xl p-4">
               <p className="text-gray-500 text-sm">Parent Name</p>
@@ -537,6 +549,9 @@ function ParentDashboard() {
                   <p className="font-semibold">{coach.name}</p>
                   <p className="text-gray-600 mt-2">{coach.role}</p>
                   <p className="text-gray-600 mt-1">{coach.email}</p>
+                  <p className="text-gray-600 mt-1">
+                    Training Time: {coach.time}
+                  </p>
                 </div>
               ))}
             </div>
